@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>PAO Trainer V2.1</title>
+<style>
+  :root {
+    --bg: #eceff4;
+    --bg-2: #e6eaf1;
+    --panel: #f4f6fa;
+    --panel-2: #eef2f7;
+    --border: #d8dee9;
+    --text: #495167;
+    --muted: #7e879d;
+    --navy: #1f234d;
+    --navy-2: #2a2f60;
+    --accent: #ff5c5d;
+    --accent-2: #ff8b59;
+    --green: #46b483;
+    --yellow: #ffbe56;
+    --orange: #ff8a4c;
+    --red: #ff5c5d;
+    --card-red: #d64646;
+    --card-black: #23283b;
+    --shadow: 0 4px 12px rgba(83, 96, 128, 0.06);
+    --shadow-soft: 0 1px 4px rgba(83, 96, 128, 0.04);
+    --radius-xl: 26px;
+    --radius-lg: 20px;
+    --radius-md: 16px;
+    --radius-sm: 12px;
+    --card-w: clamp(168px, 28vw, 236px);
+    --card-h: calc(var(--card-w) * 1.46);
+    --drawer-w: min(380px, calc(100vw - 22px));
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--text);
+    background: linear-gradient(180deg, var(--bg), var(--bg-2));
+    -webkit-font-smoothing: antialiased;
+    padding: 12px;
+  }
+
+  button, input { font: inherit; }
+  button { border: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+
+  .app {
+    max-width: 1180px;
+    margin: 0 auto;
+    display: grid;
+    gap: 14px;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow);
+  }
+
+  .surface {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+
+  .topband {
+    padding: 12px 14px;
+    display: grid;
+    gap: 8px;
+    position: sticky;
+    top: 12px;
+    z-index: 20;
+  }
+
+  .topband-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .brand-mark {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 16px;
+    background: linear-gradient(180deg, var(--navy-2), var(--navy));
+    color: #fff;
+    font-weight: 800;
+    letter-spacing: .05em;
+    flex: 0 0 auto;
+  }
+
+  .brand-title { font-size: clamp(.95rem, 1.6vw, 1.14rem); font-weight: 800; color: var(--navy); }
+  .brand-sub { font-size: .74rem; color: var(--muted); margin-top: 1px; }
+
+  .controls-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .segmented {
+    display: inline-flex;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 4px;
+    gap: 4px;
+  }
+
+  .seg-btn, .icon-btn, .pill-btn, .chip, .rate-btn, .nav-btn {
+    background: #fff;
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 12px;
+    transition: transform .14s ease, background .14s ease, color .14s ease, border-color .14s ease;
+  }
+  .seg-btn:active, .icon-btn:active, .pill-btn:active, .chip:active, .rate-btn:active, .nav-btn:active { transform: scale(.98); }
+
+  .seg-btn {
+    padding: 9px 12px;
+    min-width: 78px;
+    font-weight: 700;
+  }
+  .seg-btn.active, .chip.active {
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    border-color: transparent;
+    color: #fff;
+  }
+
+  .icon-btn, .pill-btn, .nav-btn {
+    height: 40px;
+    padding: 0 12px;
+    font-weight: 700;
+  }
+  .icon-btn { min-width: 46px; }
+  .pill-btn { white-space: nowrap; }
+
+  .counter-area {
+    display: grid;
+    gap: 6px;
+    min-width: min(320px, 100%);
+    flex: 1 1 280px;
+  }
+
+  .counter-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    font-size: .86rem;
+    flex-wrap: wrap;
+  }
+  .counter-line strong { color: var(--navy); }
+  .counter-line span:last-child { color: var(--muted); }
+
+  .progress-track {
+    height: 8px;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid var(--border);
+  }
+  .progress-fill {
+    width: 0%;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    transition: width .2s ease;
+  }
+
+  .content {
+    display: grid;
+    gap: 14px;
+  }
+
+  .stage-panel {
+    padding: 14px;
+    display: grid;
+    gap: 14px;
+  }
+
+  .stage-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .stage-title { color: var(--navy); font-weight: 800; font-size: 1rem; }
+  .stage-sub { color: var(--muted); font-size: .78rem; }
+
+  .stage {
+    position: relative;
+    min-height: clamp(430px, 64vh, 640px);
+    border-radius: 30px;
+    overflow: hidden;
+    background: linear-gradient(180deg, #f7f8fb, #eef2f7);
+    border: 1px solid var(--border);
+    display: grid;
+    place-items: center;
+    padding: 14px;
+    touch-action: pan-y;
+  }
+
+  .tap-ring {
+    position: absolute;
+    inset: 14px;
+    border-radius: 22px;
+    border: 1px dashed rgba(121,132,157,.24);
+    pointer-events: none;
+  }
+
+  .gesture-hint {
+    position: absolute;
+    left: 14px;
+    bottom: 12px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,.78);
+    color: var(--muted);
+    font-size: .72rem;
+  }
+
+  .cards-wrap {
+    width: min(100%, 760px);
+    min-height: 100%;
+    display: grid;
+    place-items: center;
+    position: relative;
+  }
+
+  .card-single, .card-fan {
+    width: 100%;
+    min-height: 100%;
+    display: grid;
+    place-items: center;
+  }
+  .card-fan {
+    position: relative;
+    min-height: calc(var(--card-h) + 28px);
+  }
+
+  .playing-card {
+    width: var(--card-w);
+    height: var(--card-h);
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+    background: #fffefa;
+    box-shadow: 0 14px 24px rgba(71, 83, 110, 0.10);
+    border: 1px solid rgba(33, 42, 67, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .playing-card::before {
+    content: "";
+    position: absolute;
+    inset: 10px;
+    border-radius: 13px;
+    border: 1px solid rgba(33, 42, 67, 0.05);
+    pointer-events: none;
+  }
+  .playing-card.red { color: var(--card-red); }
+  .playing-card.black { color: var(--card-black); }
+
+  .corner {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: .92;
+    font-weight: 800;
+  }
+  .corner.top { left: 14px; top: 14px; }
+  .corner.bottom { right: 14px; bottom: 14px; transform: rotate(180deg); }
+  .corner .rank { font-size: clamp(1.2rem, 2.4vw, 1.68rem); }
+  .corner .suit { font-size: clamp(1rem, 1.9vw, 1.18rem); }
+  .center-suit { font-size: clamp(3.6rem, 8vw, 5.2rem); line-height: 1; }
+  .card-caption {
+    position: absolute;
+    left: 50%;
+    bottom: 12px;
+    transform: translateX(-50%);
+    font-size: .81rem;
+    color: var(--muted);
+    background: rgba(255,255,255,.82);
+    border: 1px solid rgba(216,222,233,.95);
+    border-radius: 999px;
+    padding: 6px 11px;
+    white-space: nowrap;
+  }
+
+  .fan-pos-0, .fan-pos-1, .fan-pos-2 {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform-origin: center center;
+  }
+  .fan-pos-0 { transform: translate(-82%, -49%) rotate(-10deg); z-index: 3; }
+  .fan-pos-1 { transform: translate(-50%, -52%) rotate(0deg); z-index: 2; }
+  .fan-pos-2 { transform: translate(-18%, -49%) rotate(10deg); z-index: 1; }
+
+  .action-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    align-items: center;
+    justify-items: center;
+  }
+  .rating-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .rate-btn {
+    padding: 8px 10px;
+    font-weight: 800;
+    min-width: 78px;
+    font-size: .84rem;
+    background: #fff;
+  }
+  .rate-btn.easy { border-bottom: 4px solid var(--green); }
+  .rate-btn.medium { border-bottom: 4px solid var(--yellow); }
+  .rate-btn.hard { border-bottom: 4px solid var(--orange); }
+  .rate-btn.fail { border-bottom: 4px solid var(--red); }
+
+  .nav-buttons { display: flex; gap: 8px; justify-content: center; }
+  .nav-btn {
+    min-width: 48px;
+    height: 44px;
+    padding: 0 12px;
+    font-weight: 800;
+    background: #fff;
+  }
+  .nav-btn.primary {
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    color: #fff;
+    border-color: transparent;
+    min-width: 72px;
+  }
+
+  .completion {
+    display: none;
+    padding: 14px;
+    gap: 14px;
+  }
+  .completion.show { display: grid; }
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .summary-item, .stat-box, .weak-row, .drawer-block {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+  }
+  .summary-item { padding: 13px 14px; }
+  .summary-label { color: var(--muted); font-size: .8rem; margin-bottom: 6px; }
+  .summary-value { color: var(--navy); font-weight: 800; font-size: 1.06rem; }
+
+  .weak-list {
+    display: grid;
+    gap: 8px;
+    max-height: 220px;
+    overflow: auto;
+    padding-right: 4px;
+  }
+  .weak-row {
+    padding: 11px 13px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .weak-row strong { color: var(--navy); }
+  .weak-row span:last-child { color: var(--muted); font-size: .84rem; }
+
+  .drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(31, 35, 77, 0.18);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease;
+    z-index: 49;
+  }
+  .drawer-backdrop.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .settings-drawer {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: var(--drawer-w);
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 12px;
+    padding: 14px;
+    z-index: 50;
+    transform: translateX(calc(100% + 18px));
+    transition: transform .22s ease;
+    overflow: hidden;
+  }
+  .settings-drawer.show { transform: translateX(0); }
+
+  .drawer-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .drawer-title { color: var(--navy); font-weight: 800; font-size: 1rem; }
+  .drawer-sub { color: var(--muted); font-size: .82rem; }
+
+  .drawer-scroll {
+    overflow: auto;
+    display: grid;
+    gap: 12px;
+    padding-right: 4px;
+  }
+
+  .drawer-block {
+    padding: 14px;
+    display: grid;
+    gap: 12px;
+  }
+  .block-title { color: var(--navy); font-weight: 800; font-size: .96rem; }
+  .block-sub { color: var(--muted); font-size: .81rem; margin-top: -6px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { padding: 10px 12px; font-weight: 700; background: #fff; }
+  .suit-chip { min-width: 52px; text-align: center; }
+  .red-text { color: var(--card-red); }
+  .black-text { color: var(--navy); }
+
+  .toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .toggle-label { font-weight: 700; }
+  .toggle-meta { color: var(--muted); font-size: .8rem; }
+
+  .switch {
+    position: relative;
+    width: 58px;
+    height: 32px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: #fff;
+    flex: 0 0 auto;
+  }
+  .switch::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    transition: transform .18s ease, background .18s ease;
+  }
+  .switch.on {
+    background: linear-gradient(90deg, rgba(255,92,93,.14), rgba(255,139,89,.14));
+  }
+  .switch.on::after {
+    transform: translateX(26px);
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    border-color: transparent;
+  }
+
+  .slider-row { display: grid; gap: 8px; }
+  .metro-line { display: flex; justify-content: space-between; gap: 12px; }
+  .metro-line strong { color: var(--navy); }
+  input[type="range"] {
+    width: 100%;
+    margin: 0;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 8px;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid var(--border);
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 0;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    cursor: pointer;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 0;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    cursor: pointer;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .stat-box {
+    padding: 10px 8px;
+    text-align: center;
+  }
+  .stat-box .value { display: block; color: var(--navy); font-size: 1rem; font-weight: 800; }
+  .stat-box .label { display: block; margin-top: 4px; color: var(--muted); font-size: .72rem; }
+
+  .small-note { color: var(--muted); font-size: .78rem; line-height: 1.42; }
+
+  @media (max-width: 860px) {
+    .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  @media (max-width: 720px) {
+    body { padding: 10px; }
+    .topband { top: 10px; padding: 10px 12px; }
+    .brand-mark { width: 40px; height: 40px; border-radius: 13px; font-size: .95rem; }
+    .topband-row { align-items: stretch; }
+    .controls-group { width: 100%; }
+    .counter-area { min-width: 0; }
+    .action-row { grid-template-columns: 1fr; }
+    .nav-buttons { justify-content: space-between; }
+    .stage { min-height: 70vh; }
+    .settings-drawer { top: 10px; right: 10px; bottom: 10px; }
+  }
+
+  @media (max-width: 540px) {
+    :root {
+      --card-w: min(42vw, 200px);
+      --card-h: calc(var(--card-w) * 1.46);
+    }
+    .summary-grid, .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .rate-btn { flex: 1 1 calc(50% - 8px); min-width: 0; }
+    .fan-pos-0 { transform: translate(-86%, -49%) rotate(-11deg) scale(.9); }
+    .fan-pos-1 { transform: translate(-50%, -52%) rotate(0deg) scale(.94); }
+    .fan-pos-2 { transform: translate(-14%, -49%) rotate(11deg) scale(.9); }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header class="topband panel">
+      <div class="topband-row">
+        <div class="brand">
+          <div class="brand-mark">PAO</div>
+          <div>
+            <div class="brand-title">PAO Trainer · V2.1</div>
+            <div class="brand-sub">Focus cartes, filtres et révision</div>
+          </div>
+        </div>
+
+        <div class="controls-group">
+          <button class="icon-btn" id="shuffleBtn" title="Mélanger">⇄</button>
+          <button class="icon-btn" id="restartBtn" title="Recommencer">↺</button>
+          <button class="pill-btn" id="settingsBtn">☰ Paramètres</button>
+        </div>
+      </div>
+
+      <div class="topband-row">
+        <div class="counter-area">
+          <div class="counter-line">
+            <span id="counterText"><strong>Carte 1</strong> / 52</span>
+            <span id="sessionLabel">Paquet complet</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <section class="stage-panel panel">
+        <div class="stage-head">
+          <div>
+            <div class="stage-title" id="stageTitle">Mode · Personnage</div>
+            <div class="stage-sub">Tap sur la zone pour avancer — swipe gauche/droite sur mobile</div>
+          </div>
+          <div class="controls-group">
+            <button class="pill-btn" id="prevBtn">← Préc.</button>
+            <button class="pill-btn" id="nextBtn">Suiv. →</button>
+          </div>
+        </div>
+
+        <div class="stage" id="stage">
+          <div class="tap-ring"></div>
+          <div class="cards-wrap" id="cardsWrap"></div>
+          <div class="gesture-hint">tap = suivant · swipe = navigation</div>
+        </div>
+
+        <div class="action-row">
+          <div class="rating-bar" id="ratingBar">
+            <button class="rate-btn easy" data-rate="easy">Facile</button>
+            <button class="rate-btn medium" data-rate="medium">Moyen</button>
+            <button class="rate-btn hard" data-rate="hard">Difficile</button>
+            <button class="rate-btn fail" data-rate="fail">Raté</button>
+          </div>
+          <div class="nav-buttons">
+            <button class="nav-btn" id="prevAction" title="Précédent">←</button>
+            <button class="nav-btn primary" id="nextAction" title="Suivant">→</button>
+          </div>
+        </div>
+
+        <div class="small-note">La notation s'applique à la ou aux cartes visibles. En mode 3 cartes, les trois cartes reçoivent la même note.</div>
+      </section>
+
+      <section class="completion panel" id="completionPanel">
+        <div>
+          <div class="stage-title">Bilan de session</div>
+          <div class="stage-sub" id="completionSub">Session terminée.</div>
+        </div>
+        <div class="summary-grid">
+          <div class="summary-item"><div class="summary-label">Durée</div><div class="summary-value" id="sumDuration">0:00</div></div>
+          <div class="summary-item"><div class="summary-label">Cartes vues</div><div class="summary-value" id="sumSeen">0</div></div>
+          <div class="summary-item"><div class="summary-label">Cartes notées</div><div class="summary-value" id="sumRated">0</div></div>
+          <div class="summary-item"><div class="summary-label">Mode</div><div class="summary-value" id="sumMode">1 carte</div></div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-box"><span class="value" id="sumEasy">0</span><span class="label">Facile</span></div>
+          <div class="stat-box"><span class="value" id="sumMedium">0</span><span class="label">Moyen</span></div>
+          <div class="stat-box"><span class="value" id="sumHard">0</span><span class="label">Difficile</span></div>
+          <div class="stat-box"><span class="value" id="sumFail">0</span><span class="label">Raté</span></div>
+        </div>
+        <div>
+          <div class="stage-title" style="font-size:.96rem; margin-bottom:8px;">Cartes les plus faibles</div>
+          <div class="weak-list" id="summaryWeakList"></div>
+        </div>
+        <div class="controls-group">
+          <button class="pill-btn" id="restartSessionBtn">Recommencer</button>
+          <button class="pill-btn" id="reviewErrorsBtn">Revoir les ratées</button>
+          <button class="pill-btn" id="reviewWeakBtn">Cartes faibles</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+
+  <aside class="settings-drawer panel" id="settingsDrawer" aria-hidden="true">
+    <div class="drawer-head">
+      <div>
+        <div class="drawer-title">Paramètres</div>
+        <div class="drawer-sub">Menu latéral superposé</div>
+      </div>
+      <button class="icon-btn" id="closeDrawerBtn" title="Fermer">✕</button>
+    </div>
+
+    <div class="drawer-scroll">
+      <section class="drawer-block">
+        <div class="block-title">Source de session</div>
+        <div class="block-sub">Choisis ce que tu veux travailler maintenant.</div>
+        <div class="chips" id="sessionTypeChips">
+          <button class="chip active" data-session="all">Paquet complet</button>
+          <button class="chip" data-session="weak">Cartes faibles</button>
+          <button class="chip" data-session="errors">Revoir les erreurs</button>
+        </div>
+      </section>
+
+      <section class="drawer-block">
+        <div class="block-title">Affichage</div>
+        <div class="block-sub">Nombre de cartes visibles à la fois.</div>
+        <div class="segmented" aria-label="Mode d'affichage">
+          <button class="seg-btn active" data-mode="1">1 carte</button>
+          <button class="seg-btn" data-mode="3">3 cartes</button>
+        </div>
+      </section>
+
+      <section class="drawer-block">
+        <div class="block-title">Filtres</div>
+        <div class="block-sub">Enseignes et familles de cartes.</div>
+        <div>
+          <div class="small-note" style="margin-bottom:8px;">Enseignes</div>
+          <div class="chips" id="suitChips">
+            <button class="chip suit-chip red-text active" data-suit="♥">♥</button>
+            <button class="chip suit-chip red-text active" data-suit="♦">♦</button>
+            <button class="chip suit-chip black-text active" data-suit="♠">♠</button>
+            <button class="chip suit-chip black-text active" data-suit="♣">♣</button>
+          </div>
+        </div>
+        <div>
+          <div class="small-note" style="margin-bottom:8px;">Familles</div>
+          <div class="chips" id="rankFilterChips">
+            <button class="chip active" data-rankfilter="all">Toutes</button>
+            <button class="chip" data-rankfilter="figures">Figures</button>
+            <button class="chip" data-rankfilter="numbers">Numériques</button>
+            <button class="chip" data-rankfilter="aces">As</button>
+          </div>
+        </div>
+        <div class="controls-group">
+          <button class="pill-btn" id="applyFiltersBtn">Appliquer</button>
+          <button class="pill-btn" id="resetFiltersBtn">Réinitialiser</button>
+        </div>
+      </section>
+
+      <section class="drawer-block">
+        <div class="block-title">Notation & révision</div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Afficher les boutons de score</div>
+            <div class="toggle-meta">Facile / Moyen / Difficile / Raté</div>
+          </div>
+          <button class="switch on" id="toggleRatingSwitch"></button>
+        </div>
+        <div class="small-note">Les cartes faibles sont calculées à partir de l'historique. “Raté” et “Difficile” pèsent le plus.</div>
+        <div class="controls-group">
+          <button class="pill-btn" id="clearStatsBtn">Effacer l'historique</button>
+        </div>
+      </section>
+
+      <section class="drawer-block">
+        <div class="block-title">Métronome</div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Avance automatique</div>
+            <div class="toggle-meta">Passe à la carte suivante toutes les x secondes</div>
+          </div>
+          <button class="switch" id="metroSwitch"></button>
+        </div>
+        <div class="slider-row">
+          <div class="metro-line"><span>Intervalle</span><strong id="metroValue">4.0 s</strong></div>
+          <input id="metroSlider" type="range" min="1" max="15" step="0.5" value="4" />
+        </div>
+      </section>
+
+      <section class="drawer-block">
+        <div class="block-title">Statistiques rapides</div>
+        <div class="stats-grid">
+          <div class="stat-box"><span class="value" id="globalWeakCount">0</span><span class="label">Faibles</span></div>
+          <div class="stat-box"><span class="value" id="globalErrorCount">0</span><span class="label">Avec erreurs</span></div>
+          <div class="stat-box"><span class="value" id="globalRatedCount">0</span><span class="label">Notées</span></div>
+          <div class="stat-box"><span class="value" id="globalSeenCount">0</span><span class="label">Vues</span></div>
+        </div>
+        <div>
+          <div class="small-note" style="margin-bottom:8px;">Top 8 cartes faibles</div>
+          <div class="weak-list" id="weakList"></div>
+        </div>
+      </section>
+    </div>
+  </aside>
+
+<script>
+(() => {
+  const SUITS = ['♠', '♥', '♦', '♣'];
+  const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+  const RED_SUITS = new Set(['♥','♦']);
+  const FIGURES = new Set(['J','Q','K']);
+  const STORAGE_KEY = 'pao-trainer-v21-state';
+
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+  function buildDeck() {
+    const out = [];
+    for (const suit of SUITS) for (const rank of RANKS) out.push({ rank, suit, id: `${rank}${suit}` });
+    return out;
+  }
+
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function defaultStats() {
+    const stats = {};
+    buildDeck().forEach(c => stats[c.id] = { easy:0, medium:0, hard:0, fail:0, seen:0 });
+    return stats;
+  }
+
+  function defaultState() {
+    return {
+      cardMode: 1,
+      sessionType: 'all',
+      rankFilter: 'all',
+      suitFilter: [...SUITS],
+      showRatings: true,
+      metroOn: false,
+      metroSeconds: 4,
+      stats: defaultStats(),
+      drawerOpen: false
+    };
+  }
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return defaultState();
+      const parsed = JSON.parse(raw);
+      return {
+        ...defaultState(),
+        ...parsed,
+        stats: { ...defaultStats(), ...(parsed.stats || {}) },
+        suitFilter: Array.isArray(parsed.suitFilter) && parsed.suitFilter.length ? parsed.suitFilter : [...SUITS]
+      };
+    } catch {
+      return defaultState();
+    }
+  }
+
+  const state = {
+    ...loadState(),
+    deck: [],
+    idx: 0,
+    sessionStartedAt: Date.now(),
+    sessionFinishedAt: null,
+    sessionViewSet: new Set(),
+    sessionRatedSet: new Set(),
+    sessionRatings: { easy: 0, medium: 0, hard: 0, fail: 0 },
+    metroTimer: null,
+    lastRenderSignature: '',
+    lastTouchAt: 0
+  };
+
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      cardMode: state.cardMode,
+      sessionType: state.sessionType,
+      rankFilter: state.rankFilter,
+      suitFilter: state.suitFilter,
+      showRatings: state.showRatings,
+      metroOn: state.metroOn,
+      metroSeconds: state.metroSeconds,
+      stats: state.stats,
+      drawerOpen: state.drawerOpen
+    }));
+  }
+
+  function getWeakness(cardId) {
+    const s = state.stats[cardId] || { easy:0, medium:0, hard:0, fail:0, seen:0 };
+    return (s.fail * 4) + (s.hard * 2.5) + (s.medium * 1.25) - (s.easy * 1.1);
+  }
+
+  function getErrorPressure(cardId) {
+    const s = state.stats[cardId] || { easy:0, medium:0, hard:0, fail:0, seen:0 };
+    return (s.fail * 3) + (s.hard * 1.5);
+  }
+
+  function getSortedWeakCards() {
+    return buildDeck()
+      .map(card => ({ ...card, weakness: getWeakness(card.id), errorPressure: getErrorPressure(card.id), stat: state.stats[card.id] }))
+      .filter(card => card.weakness > 0 || card.errorPressure > 0)
+      .sort((a, b) => b.weakness - a.weakness || b.errorPressure - a.errorPressure || b.stat.seen - a.stat.seen);
+  }
+
+  function rankMatches(rank) {
+    if (state.rankFilter === 'all') return true;
+    if (state.rankFilter === 'figures') return FIGURES.has(rank);
+    if (state.rankFilter === 'numbers') return !FIGURES.has(rank) && rank !== 'A';
+    if (state.rankFilter === 'aces') return rank === 'A';
+    return true;
+  }
+
+  function buildSessionDeck() {
+    let cards = buildDeck().filter(card => state.suitFilter.includes(card.suit) && rankMatches(card.rank));
+
+    if (state.sessionType === 'weak') {
+      const weakIds = getSortedWeakCards()
+        .filter(card => state.suitFilter.includes(card.suit) && rankMatches(card.rank))
+        .map(card => card.id);
+      cards = weakIds.length ? weakIds.map(id => buildDeck().find(c => c.id === id)).filter(Boolean) : cards;
+    } else if (state.sessionType === 'errors') {
+      const errCards = buildDeck()
+        .filter(card => state.suitFilter.includes(card.suit) && rankMatches(card.rank))
+        .map(card => ({ ...card, pressure: getErrorPressure(card.id) }))
+        .filter(card => card.pressure > 0)
+        .sort((a, b) => b.pressure - a.pressure);
+      cards = errCards.length ? errCards : cards;
+    } else {
+      cards = shuffle(cards);
+    }
+
+    if (!cards.length) cards = shuffle(buildDeck());
+    return cards;
+  }
+
+  function startNewSession(preserveCurrentType = true) {
+    if (!preserveCurrentType) state.sessionType = 'all';
+    state.deck = buildSessionDeck();
+    state.idx = 0;
+    state.sessionStartedAt = Date.now();
+    state.sessionFinishedAt = null;
+    state.sessionViewSet = new Set();
+    state.sessionRatedSet = new Set();
+    state.sessionRatings = { easy: 0, medium: 0, hard: 0, fail: 0 };
+    state.lastRenderSignature = '';
+    $('#completionPanel').classList.remove('show');
+    render();
+  }
+
+  function visibleCards() {
+    if (!state.deck.length) return [];
+    const remaining = state.deck.length - state.idx;
+    const count = Math.min(state.cardMode, remaining);
+    return state.deck.slice(state.idx, state.idx + count);
+  }
+
+  function cardLabel(card) {
+    const suitName = ({ '♠':'Pique', '♥':'Cœur', '♦':'Carreau', '♣':'Trèfle' })[card.suit] || '';
+    const rankName = ({ 'A':'As', 'J':'Valet', 'Q':'Dame', 'K':'Roi' })[card.rank] || card.rank;
+    return `${rankName} de ${suitName}`;
+  }
+
+  function playingCardHTML(card, extraClass = '') {
+    const colorClass = RED_SUITS.has(card.suit) ? 'red' : 'black';
+    return `
+      <article class="playing-card ${colorClass} ${extraClass}" data-id="${card.id}">
+        <div class="corner top"><span class="rank">${card.rank}</span><span class="suit">${card.suit}</span></div>
+        <div class="center-suit">${card.suit}</div>
+        <div class="corner bottom"><span class="rank">${card.rank}</span><span class="suit">${card.suit}</span></div>
+        <div class="card-caption">${cardLabel(card)}</div>
+      </article>
+    `;
+  }
+
+  function renderCards() {
+    const wrap = $('#cardsWrap');
+    const cards = visibleCards();
+    if (!cards.length) {
+      state.lastRenderSignature = '';
+      wrap.innerHTML = '<div class="stage-title" style="text-align:center;color:var(--navy)">Session terminée</div>';
+      return;
+    }
+    const signature = cards.map(card => card.id).join('|');
+    if (signature !== state.lastRenderSignature) {
+      cards.forEach(card => {
+        state.sessionViewSet.add(card.id);
+        state.stats[card.id].seen += 1;
+      });
+      state.lastRenderSignature = signature;
+    }
+
+    if (cards.length === 1) {
+      wrap.innerHTML = `<div class="card-single">${playingCardHTML(cards[0])}</div>`;
+    } else {
+      const positions = ['fan-pos-0','fan-pos-1','fan-pos-2'];
+      wrap.innerHTML = `<div class="card-fan">${cards.map((card, i) => playingCardHTML(card, positions[i] || 'fan-pos-1')).join('')}</div>`;
+    }
+  }
+
+  function renderCounter() {
+    const total = state.deck.length || 0;
+    const cards = visibleCards();
+    const current = state.idx + 1;
+    let label = `<strong>Carte ${Math.min(current, Math.max(total, 1))}</strong> / ${total}`;
+    if (state.cardMode === 3 && cards.length) label = `<strong>Cartes ${state.idx + 1}–${state.idx + cards.length}</strong> / ${total}`;
+    $('#counterText').innerHTML = label;
+    $('#progressFill').style.width = `${total ? Math.min(100, (state.idx / total) * 100) : 0}%`;
+    $('#sessionLabel').textContent = ({ all: 'Paquet complet', weak: 'Cartes faibles', errors: 'Revoir les erreurs' })[state.sessionType] || 'Paquet complet';
+    $('#stageTitle').textContent = state.cardMode === 1 ? 'Mode · Personnage' : 'Mode · P · A · O (3 cartes)';
+  }
+
+  function renderRatingBar() {
+    $('#ratingBar').style.display = state.showRatings ? 'flex' : 'none';
+    $('#toggleRatingSwitch').classList.toggle('on', state.showRatings);
+  }
+
+  function formatDuration(ms) {
+    const totalSeconds = Math.max(0, Math.round(ms / 1000));
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = String(totalSeconds % 60).padStart(2, '0');
+    return `${mins}:${secs}`;
+  }
+
+  function showCompletion() {
+    state.sessionFinishedAt = Date.now();
+    const weakCards = getSortedWeakCards().slice(0, 8);
+    $('#completionPanel').classList.add('show');
+    $('#completionSub').textContent = `${state.deck.length} cartes dans la session · ${state.sessionType === 'all' ? 'paquet complet' : state.sessionType === 'weak' ? 'cartes faibles' : 'revoir les erreurs'}`;
+    $('#sumDuration').textContent = formatDuration(state.sessionFinishedAt - state.sessionStartedAt);
+    $('#sumSeen').textContent = String(state.sessionViewSet.size);
+    $('#sumRated').textContent = String(state.sessionRatedSet.size);
+    $('#sumMode').textContent = state.cardMode === 1 ? '1 carte' : '3 cartes';
+    $('#sumEasy').textContent = String(state.sessionRatings.easy);
+    $('#sumMedium').textContent = String(state.sessionRatings.medium);
+    $('#sumHard').textContent = String(state.sessionRatings.hard);
+    $('#sumFail').textContent = String(state.sessionRatings.fail);
+    $('#summaryWeakList').innerHTML = weakCards.length
+      ? weakCards.map(card => `<div class="weak-row"><strong>${card.id}</strong><span>faiblesse ${card.weakness.toFixed(1)} · vu ${card.stat.seen}×</span></div>`).join('')
+      : '<div class="weak-row"><strong>RAS</strong><span>Pas encore de cartes faibles détectées</span></div>';
+  }
+
+  function updateQuickStats() {
+    let weak = 0, errors = 0, rated = 0, seen = 0;
+    buildDeck().forEach(card => {
+      const s = state.stats[card.id];
+      if (getWeakness(card.id) > 0) weak++;
+      if (getErrorPressure(card.id) > 0) errors++;
+      if ((s.easy + s.medium + s.hard + s.fail) > 0) rated++;
+      if (s.seen > 0) seen++;
+    });
+    $('#globalWeakCount').textContent = String(weak);
+    $('#globalErrorCount').textContent = String(errors);
+    $('#globalRatedCount').textContent = String(rated);
+    $('#globalSeenCount').textContent = String(seen);
+
+    const weakCards = getSortedWeakCards().slice(0, 8);
+    $('#weakList').innerHTML = weakCards.length
+      ? weakCards.map(card => `<div class="weak-row"><strong>${card.id}</strong><span>f ${card.stat.fail} · d ${card.stat.hard} · m ${card.stat.medium} · facile ${card.stat.easy}</span></div>`).join('')
+      : '<div class="weak-row"><strong>Aucune</strong><span>Note quelques cartes pour alimenter ce classement</span></div>';
+  }
+
+  function syncControls() {
+    $$('.seg-btn[data-mode]').forEach(btn => btn.classList.toggle('active', Number(btn.dataset.mode) === state.cardMode));
+    $$('#sessionTypeChips .chip').forEach(btn => btn.classList.toggle('active', btn.dataset.session === state.sessionType));
+    $$('#rankFilterChips .chip').forEach(btn => btn.classList.toggle('active', btn.dataset.rankfilter === state.rankFilter));
+    $$('#suitChips .chip').forEach(btn => btn.classList.toggle('active', state.suitFilter.includes(btn.dataset.suit)));
+    $('#metroValue').textContent = `${Number(state.metroSeconds).toFixed(1)} s`;
+    $('#metroSlider').value = String(state.metroSeconds);
+    $('#metroSwitch').classList.toggle('on', state.metroOn);
+    $('#toggleRatingSwitch').classList.toggle('on', state.showRatings);
+    $('#settingsDrawer').classList.toggle('show', state.drawerOpen);
+    $('#drawerBackdrop').classList.toggle('show', state.drawerOpen);
+    $('#settingsDrawer').setAttribute('aria-hidden', state.drawerOpen ? 'false' : 'true');
+    saveState();
+  }
+
+  function render() {
+    renderCounter();
+    renderCards();
+    renderRatingBar();
+    updateQuickStats();
+    syncControls();
+  }
+
+  function next() {
+    if (state.idx + state.cardMode >= state.deck.length) {
+      state.idx = state.deck.length;
+      render();
+      stopMetro();
+      showCompletion();
+      return;
+    }
+    state.idx += state.cardMode;
+    render();
+  }
+
+  function prev() {
+    state.idx = Math.max(0, state.idx - state.cardMode);
+    $('#completionPanel').classList.remove('show');
+    render();
+  }
+
+  function rateVisible(rate) {
+    const cards = visibleCards();
+    if (!cards.length) return;
+    cards.forEach(card => {
+      state.stats[card.id][rate] += 1;
+      state.sessionRatedSet.add(card.id);
+    });
+    state.sessionRatings[rate] += cards.length;
+    render();
+    next();
+  }
+
+  function toggleSuit(suit) {
+    const set = new Set(state.suitFilter);
+    if (set.has(suit)) set.delete(suit); else set.add(suit);
+    state.suitFilter = Array.from(set);
+    if (!state.suitFilter.length) state.suitFilter = [...SUITS];
+    syncControls();
+  }
+
+  function resetFilters() {
+    state.rankFilter = 'all';
+    state.suitFilter = [...SUITS];
+    state.sessionType = 'all';
+    startNewSession(true);
+  }
+
+  function clearStats() {
+    if (!confirm("Effacer tout l'historique des scores et des cartes faibles ?")) return;
+    state.stats = defaultStats();
+    startNewSession(true);
+  }
+
+  function openDrawer() { state.drawerOpen = true; syncControls(); }
+  function closeDrawer() { state.drawerOpen = false; syncControls(); }
+  function toggleDrawer() { state.drawerOpen = !state.drawerOpen; syncControls(); }
+
+  function stopMetro() {
+    if (state.metroTimer) clearInterval(state.metroTimer);
+    state.metroTimer = null;
+    state.metroOn = false;
+    syncControls();
+  }
+
+  function startMetro() {
+    if (state.metroTimer) clearInterval(state.metroTimer);
+    state.metroOn = true;
+    state.metroTimer = setInterval(() => {
+      if ($('#completionPanel').classList.contains('show')) {
+        stopMetro();
+        return;
+      }
+      next();
+    }, Number(state.metroSeconds) * 1000);
+    syncControls();
+  }
+
+  function toggleMetro() {
+    if (state.metroOn) stopMetro(); else startMetro();
+  }
+
+  function handleSwipe(stageEl) {
+    let startX = 0, startY = 0, startTime = 0;
+    stageEl.addEventListener('touchstart', e => {
+      if (!e.changedTouches?.length) return;
+      const t = e.changedTouches[0];
+      startX = t.clientX;
+      startY = t.clientY;
+      startTime = Date.now();
+    }, { passive: true });
+
+    stageEl.addEventListener('touchend', e => {
+      if (!e.changedTouches?.length) return;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - startX;
+      const dy = t.clientY - startY;
+      const dt = Date.now() - startTime;
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+      state.lastTouchAt = Date.now();
+
+      if (absX < 10 && absY < 10 && dt < 280) { next(); return; }
+      if (absX > 40 && absX > absY) {
+        if (dx < 0) next(); else prev();
+      }
+    }, { passive: true });
+  }
+
+  function bindEvents() {
+    $$('.seg-btn[data-mode]').forEach(btn => btn.addEventListener('click', () => {
+      state.cardMode = Number(btn.dataset.mode);
+      state.idx = Math.floor(state.idx / state.cardMode) * state.cardMode;
+      if (state.idx >= state.deck.length) state.idx = Math.max(0, state.deck.length - state.cardMode);
+      $('#completionPanel').classList.remove('show');
+      render();
+    }));
+
+    $('#shuffleBtn').addEventListener('click', () => {
+      state.deck = shuffle(state.deck);
+      state.idx = 0;
+      state.lastRenderSignature = '';
+      $('#completionPanel').classList.remove('show');
+      render();
+    });
+    $('#restartBtn').addEventListener('click', () => startNewSession(true));
+    $('#settingsBtn').addEventListener('click', toggleDrawer);
+    $('#closeDrawerBtn').addEventListener('click', closeDrawer);
+    $('#drawerBackdrop').addEventListener('click', closeDrawer);
+
+    $('#prevBtn').addEventListener('click', prev);
+    $('#nextBtn').addEventListener('click', next);
+    $('#prevAction').addEventListener('click', prev);
+    $('#nextAction').addEventListener('click', next);
+
+    $('#restartSessionBtn').addEventListener('click', () => startNewSession(true));
+    $('#reviewErrorsBtn').addEventListener('click', () => { state.sessionType = 'errors'; startNewSession(true); });
+    $('#reviewWeakBtn').addEventListener('click', () => { state.sessionType = 'weak'; startNewSession(true); });
+
+    $$('.rate-btn').forEach(btn => btn.addEventListener('click', () => rateVisible(btn.dataset.rate)));
+
+    $$('#sessionTypeChips .chip').forEach(btn => btn.addEventListener('click', () => {
+      state.sessionType = btn.dataset.session;
+      startNewSession(true);
+    }));
+
+    $$('#rankFilterChips .chip').forEach(btn => btn.addEventListener('click', () => {
+      state.rankFilter = btn.dataset.rankfilter;
+      syncControls();
+    }));
+
+    $$('#suitChips .chip').forEach(btn => btn.addEventListener('click', () => toggleSuit(btn.dataset.suit)));
+
+    $('#applyFiltersBtn').addEventListener('click', () => startNewSession(true));
+    $('#resetFiltersBtn').addEventListener('click', resetFilters);
+    $('#clearStatsBtn').addEventListener('click', clearStats);
+    $('#toggleRatingSwitch').addEventListener('click', () => {
+      state.showRatings = !state.showRatings;
+      renderRatingBar();
+      syncControls();
+    });
+    $('#metroSwitch').addEventListener('click', toggleMetro);
+    $('#metroSlider').addEventListener('input', e => {
+      state.metroSeconds = Number(e.target.value);
+      $('#metroValue').textContent = `${Number(state.metroSeconds).toFixed(1)} s`;
+      if (state.metroOn) startMetro();
+      saveState();
+    });
+
+    $('#stage').addEventListener('click', e => {
+      if (Date.now() - state.lastTouchAt < 450) return;
+      if (e.target.closest('button')) return;
+      next();
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && state.drawerOpen) { closeDrawer(); return; }
+      if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+      if (e.key.toLowerCase() === 'f') rateVisible('easy');
+      if (e.key.toLowerCase() === 'm') rateVisible('medium');
+      if (e.key.toLowerCase() === 'd') rateVisible('hard');
+      if (e.key.toLowerCase() === 'r') rateVisible('fail');
+    });
+
+    handleSwipe($('#stage'));
+  }
+
+  bindEvents();
+  startNewSession(true);
+  if (state.metroOn) startMetro();
+})();
+</script>
+</body>
+</html>
