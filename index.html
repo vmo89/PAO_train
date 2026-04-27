@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>PAO Trainer V2.1</title>
+<title>PAO Trainer V2.3 Focus Mobile</title>
 <style>
   :root {
     --bg: #eceff4;
@@ -571,6 +571,78 @@
     .fan-pos-1 { transform: translate(-50%, -52%) rotate(0deg) scale(.94); }
     .fan-pos-2 { transform: translate(-14%, -49%) rotate(11deg) scale(.9); }
   }
+
+
+/* V2.3 — mobile focus: tout tenir sur un écran */
+.compact-title { display: none; }
+.topband { position: sticky; top: 8px; padding: 8px 10px; gap: 6px; border-radius: 18px; }
+.topband-row { gap: 8px; }
+.brand { display: none; }
+.controls-group { gap: 6px; }
+.icon-btn, .pill-btn, .nav-btn { height: 36px; padding: 0 10px; border-radius: 10px; font-size: .86rem; }
+.icon-btn { min-width: 38px; }
+.pill-btn { font-size: .86rem; }
+.counter-area { gap: 4px; min-width: 0; flex-basis: 100%; }
+.counter-line { font-size: .8rem; line-height: 1.15; }
+.progress-track { height: 6px; }
+.content { gap: 8px; }
+.stage-panel { padding: 8px; gap: 8px; border-radius: 20px; }
+.stage-head { display: none; }
+.stage { min-height: calc(100svh - 218px); max-height: calc(100svh - 218px); padding: 4px; border-radius: 20px; }
+.tap-ring { inset: 6px; border-radius: 16px; }
+.gesture-hint { display: none; }
+.cards-wrap { min-height: 100%; }
+.card-single, .card-fan { min-height: 100%; }
+.card-caption { display: none; }
+.action-row { gap: 7px; }
+.rating-bar { gap: 6px; width: 100%; }
+.rate-btn { padding: 7px 8px; min-width: 0; flex: 1 1 0; font-size: .78rem; border-radius: 10px; border-bottom-width: 3px; }
+.nav-buttons { gap: 6px; }
+.nav-btn { height: 34px; min-width: 42px; font-size: .8rem; }
+.nav-btn.primary { min-width: 54px; }
+.stage-panel > .small-note { display: none; }
+.completion { padding: 10px; border-radius: 18px; }
+.summary-grid { gap: 6px; }
+.summary-item { padding: 9px; }
+
+@media (max-width: 720px) {
+  body { padding: 6px; }
+  .app { gap: 8px; }
+  .topband { top: 6px; padding: 8px; }
+  .topband-row:first-child { justify-content: flex-end; }
+  .topband-row:first-child::before { content: "PAO"; margin-right: auto; color: var(--navy); font-weight: 900; font-size: .9rem; background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; height: 36px; min-width: 42px; display: grid; place-items: center; }
+  .controls-group { width: auto; }
+  #settingsBtn { font-size: 0; width: 42px; padding: 0; }
+  #settingsBtn::before { content: "☰"; font-size: 1rem; }
+  #shuffleBtn, #restartBtn { width: 38px; padding: 0; }
+  .counter-line span:last-child { font-size: .75rem; }
+  .stage { min-height: calc(100svh - 190px); max-height: calc(100svh - 190px); }
+  :root { --card-w: min(56vw, 220px); --card-h: calc(var(--card-w) * 1.46); }
+  .corner.top { left: 10px; top: 10px; }
+  .corner.bottom { right: 10px; bottom: 10px; }
+  .corner .rank { font-size: clamp(1rem, 5vw, 1.42rem); }
+  .corner .suit { font-size: clamp(.9rem, 4vw, 1.08rem); }
+  .center-suit { font-size: clamp(3.2rem, 16vw, 4.8rem); }
+  .playing-card { border-radius: 17px; }
+  .playing-card::before { inset: 7px; border-radius: 12px; }
+  .fan-pos-0 { transform: translate(-86%, -49%) rotate(-11deg) scale(.92); z-index: 3; }
+  .fan-pos-1 { transform: translate(-50%, -52%) rotate(0deg) scale(.96); z-index: 2; }
+  .fan-pos-2 { transform: translate(-14%, -49%) rotate(11deg) scale(.92); z-index: 1; }
+  .settings-drawer { top: 6px; right: 6px; bottom: 6px; padding: 10px; border-radius: 18px; }
+}
+
+@media (max-width: 390px) {
+  body { padding: 5px; }
+  .topband { padding: 7px; }
+  .icon-btn, .pill-btn { height: 34px; }
+  .topband-row:first-child::before { height: 34px; min-width: 38px; font-size: .82rem; }
+  .counter-line { font-size: .76rem; }
+  .stage { min-height: calc(100svh - 178px); max-height: calc(100svh - 178px); }
+  :root { --card-w: min(58vw, 210px); }
+  .rate-btn { font-size: .74rem; padding: 6px 6px; }
+  .nav-btn { height: 32px; }
+}
+
 </style>
 </head>
 <body>
@@ -580,8 +652,8 @@
         <div class="brand">
           <div class="brand-mark">PAO</div>
           <div>
-            <div class="brand-title">PAO Trainer · V2.1</div>
-            <div class="brand-sub">Focus cartes, filtres et révision</div>
+            <div class="brand-title">PAO Trainer · V2.3</div>
+            <div class="brand-sub">Focus cartes</div>
           </div>
         </div>
 
