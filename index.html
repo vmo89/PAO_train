@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>PAO Trainer V2.3 Focus Mobile</title>
+<title>PAO Trainer V2.4 Focus Mobile</title>
 <style>
   :root {
     --bg: #eceff4;
@@ -643,6 +643,41 @@
   .nav-btn { height: 32px; }
 }
 
+
+/* V2.4 — minuteur, animation brève, lisibilité des numéros */
+.status-line { display: inline-flex; align-items: center; gap: 6px; }
+.timer-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 46px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid var(--border);
+  color: var(--navy);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.timer-chip[hidden] { display: none; }
+.corner .rank { font-size: clamp(1.55rem, 3vw, 2.05rem); line-height: .9; }
+.corner .suit { font-size: clamp(1.12rem, 2.1vw, 1.38rem); }
+@keyframes cardQuickIn {
+  from { opacity: .55; transform: translateY(8px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.cards-wrap.card-change .playing-card { animation: cardQuickIn 120ms ease-out both; }
+@media (max-width: 720px) {
+  .timer-chip { height: 20px; min-width: 42px; font-size: .74rem; padding: 0 6px; }
+  .corner .rank { font-size: clamp(1.35rem, 7vw, 1.9rem); }
+  .corner .suit { font-size: clamp(1.02rem, 5vw, 1.34rem); }
+}
+@media (max-width: 390px) {
+  .timer-chip { font-size: .7rem; min-width: 40px; }
+  .corner .rank { font-size: clamp(1.28rem, 7.6vw, 1.8rem); }
+}
+
 </style>
 </head>
 <body>
@@ -652,7 +687,7 @@
         <div class="brand">
           <div class="brand-mark">PAO</div>
           <div>
-            <div class="brand-title">PAO Trainer · V2.3</div>
+            <div class="brand-title">PAO Trainer · V2.4</div>
             <div class="brand-sub">Focus cartes</div>
           </div>
         </div>
@@ -668,7 +703,7 @@
         <div class="counter-area">
           <div class="counter-line">
             <span id="counterText"><strong>Carte 1</strong> / 52</span>
-            <span id="sessionLabel">Paquet complet</span>
+            <span class="status-line"><span id="sessionLabel">Paquet complet</span><span class="timer-chip" id="timerChip">0:00</span></span>
           </div>
           <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
         </div>
@@ -814,6 +849,18 @@
       </section>
 
       <section class="drawer-block">
+        <div class="block-title">Minuteur</div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Afficher le minuteur</div>
+            <div class="toggle-meta">Démarre au début du paquet et s'arrête à la fin</div>
+          </div>
+          <button class="switch on" id="timerSwitch"></button>
+        </div>
+        <div class="small-note">En mode 1 carte, le temps avant notation est enregistré et influence légèrement le classement des cartes faibles.</div>
+      </section>
+
+      <section class="drawer-block">
         <div class="block-title">Métronome</div>
         <div class="toggle-row">
           <div>
@@ -872,7 +919,7 @@
 
   function defaultStats() {
     const stats = {};
-    buildDeck().forEach(c => stats[c.id] = { easy:0, medium:0, hard:0, fail:0, seen:0 });
+    buildDeck().forEach(c => stats[c.id] = { easy:0, medium:0, hard:0, fail:0, seen:0, timeTotalMs:0, timeCount:0 });
     return stats;
   }
 
@@ -883,6 +930,7 @@
       rankFilter: 'all',
       suitFilter: [...SUITS],
       showRatings: true,
+      showTimer: true,
       metroOn: false,
       metroSeconds: 4,
       stats: defaultStats(),
@@ -898,7 +946,7 @@
       return {
         ...defaultState(),
         ...parsed,
-        stats: { ...defaultStats(), ...(parsed.stats || {}) },
+        stats: Object.fromEntries(Object.entries({ ...defaultStats(), ...(parsed.stats || {}) }).map(([id, st]) => [id, { easy:0, medium:0, hard:0, fail:0, seen:0, timeTotalMs:0, timeCount:0, ...st }])),
         suitFilter: Array.isArray(parsed.suitFilter) && parsed.suitFilter.length ? parsed.suitFilter : [...SUITS]
       };
     } catch {
@@ -916,6 +964,8 @@
     sessionRatedSet: new Set(),
     sessionRatings: { easy: 0, medium: 0, hard: 0, fail: 0 },
     metroTimer: null,
+    sessionTimerInterval: null,
+    currentCardStartedAt: Date.now(),
     lastRenderSignature: '',
     lastTouchAt: 0
   };
@@ -927,6 +977,7 @@
       rankFilter: state.rankFilter,
       suitFilter: state.suitFilter,
       showRatings: state.showRatings,
+      showTimer: state.showTimer,
       metroOn: state.metroOn,
       metroSeconds: state.metroSeconds,
       stats: state.stats,
@@ -934,9 +985,44 @@
     }));
   }
 
+  function getAverageTimeMs(cardId) {
+    const s = state.stats[cardId] || {};
+    return s.timeCount ? s.timeTotalMs / s.timeCount : 0;
+  }
+
+  function getTimePenalty(cardId) {
+    const avg = getAverageTimeMs(cardId);
+    if (!avg) return 0;
+    if (avg >= 7000) return 2;
+    if (avg >= 4500) return 1;
+    if (avg <= 1800) return -0.45;
+    return 0;
+  }
+
+  function updateTimerDisplay() {
+    const elapsed = (state.sessionFinishedAt || Date.now()) - state.sessionStartedAt;
+    const chip = $('#timerChip');
+    if (chip) {
+      chip.textContent = formatDuration(elapsed);
+      chip.hidden = !state.showTimer;
+    }
+  }
+
+  function startSessionTimer() {
+    if (state.sessionTimerInterval) clearInterval(state.sessionTimerInterval);
+    updateTimerDisplay();
+    state.sessionTimerInterval = setInterval(updateTimerDisplay, 500);
+  }
+
+  function stopSessionTimer() {
+    if (state.sessionTimerInterval) clearInterval(state.sessionTimerInterval);
+    state.sessionTimerInterval = null;
+    updateTimerDisplay();
+  }
+
   function getWeakness(cardId) {
     const s = state.stats[cardId] || { easy:0, medium:0, hard:0, fail:0, seen:0 };
-    return (s.fail * 4) + (s.hard * 2.5) + (s.medium * 1.25) - (s.easy * 1.1);
+    return (s.fail * 4) + (s.hard * 2.5) + (s.medium * 1.25) - (s.easy * 1.1) + getTimePenalty(cardId);
   }
 
   function getErrorPressure(cardId) {
@@ -992,7 +1078,9 @@
     state.sessionRatedSet = new Set();
     state.sessionRatings = { easy: 0, medium: 0, hard: 0, fail: 0 };
     state.lastRenderSignature = '';
+    state.currentCardStartedAt = Date.now();
     $('#completionPanel').classList.remove('show');
+    startSessionTimer();
     render();
   }
 
@@ -1036,6 +1124,7 @@
         state.stats[card.id].seen += 1;
       });
       state.lastRenderSignature = signature;
+      state.currentCardStartedAt = Date.now();
     }
 
     if (cards.length === 1) {
@@ -1044,6 +1133,10 @@
       const positions = ['fan-pos-0','fan-pos-1','fan-pos-2'];
       wrap.innerHTML = `<div class="card-fan">${cards.map((card, i) => playingCardHTML(card, positions[i] || 'fan-pos-1')).join('')}</div>`;
     }
+    wrap.classList.remove('card-change');
+    void wrap.offsetWidth;
+    wrap.classList.add('card-change');
+    setTimeout(() => wrap.classList.remove('card-change'), 160);
   }
 
   function renderCounter() {
@@ -1072,6 +1165,7 @@
 
   function showCompletion() {
     state.sessionFinishedAt = Date.now();
+    stopSessionTimer();
     const weakCards = getSortedWeakCards().slice(0, 8);
     $('#completionPanel').classList.add('show');
     $('#completionSub').textContent = `${state.deck.length} cartes dans la session · ${state.sessionType === 'all' ? 'paquet complet' : state.sessionType === 'weak' ? 'cartes faibles' : 'revoir les erreurs'}`;
@@ -1084,7 +1178,7 @@
     $('#sumHard').textContent = String(state.sessionRatings.hard);
     $('#sumFail').textContent = String(state.sessionRatings.fail);
     $('#summaryWeakList').innerHTML = weakCards.length
-      ? weakCards.map(card => `<div class="weak-row"><strong>${card.id}</strong><span>faiblesse ${card.weakness.toFixed(1)} · vu ${card.stat.seen}×</span></div>`).join('')
+      ? weakCards.map(card => `<div class="weak-row"><strong>${card.id}</strong><span>faiblesse ${card.weakness.toFixed(1)} · ${card.stat.timeCount ? (card.stat.timeTotalMs / card.stat.timeCount / 1000).toFixed(1)+'s moy. · ' : ''}vu ${card.stat.seen}×</span></div>`).join('')
       : '<div class="weak-row"><strong>RAS</strong><span>Pas encore de cartes faibles détectées</span></div>';
   }
 
@@ -1104,7 +1198,7 @@
 
     const weakCards = getSortedWeakCards().slice(0, 8);
     $('#weakList').innerHTML = weakCards.length
-      ? weakCards.map(card => `<div class="weak-row"><strong>${card.id}</strong><span>f ${card.stat.fail} · d ${card.stat.hard} · m ${card.stat.medium} · facile ${card.stat.easy}</span></div>`).join('')
+      ? weakCards.map(card => `<div class="weak-row"><strong>${card.id}</strong><span>f ${card.stat.fail} · d ${card.stat.hard} · ${card.stat.timeCount ? (card.stat.timeTotalMs / card.stat.timeCount / 1000).toFixed(1)+'s · ' : ''}facile ${card.stat.easy}</span></div>`).join('')
       : '<div class="weak-row"><strong>Aucune</strong><span>Note quelques cartes pour alimenter ce classement</span></div>';
   }
 
@@ -1117,6 +1211,8 @@
     $('#metroSlider').value = String(state.metroSeconds);
     $('#metroSwitch').classList.toggle('on', state.metroOn);
     $('#toggleRatingSwitch').classList.toggle('on', state.showRatings);
+    $('#timerSwitch')?.classList.toggle('on', state.showTimer);
+    updateTimerDisplay();
     $('#settingsDrawer').classList.toggle('show', state.drawerOpen);
     $('#drawerBackdrop').classList.toggle('show', state.drawerOpen);
     $('#settingsDrawer').setAttribute('aria-hidden', state.drawerOpen ? 'false' : 'true');
@@ -1152,8 +1248,13 @@
   function rateVisible(rate) {
     const cards = visibleCards();
     if (!cards.length) return;
+    const elapsedForCard = Date.now() - state.currentCardStartedAt;
     cards.forEach(card => {
       state.stats[card.id][rate] += 1;
+      if (state.cardMode === 1) {
+        state.stats[card.id].timeTotalMs = (state.stats[card.id].timeTotalMs || 0) + elapsedForCard;
+        state.stats[card.id].timeCount = (state.stats[card.id].timeCount || 0) + 1;
+      }
       state.sessionRatedSet.add(card.id);
     });
     state.sessionRatings[rate] += cards.length;
@@ -1249,8 +1350,15 @@
     $('#shuffleBtn').addEventListener('click', () => {
       state.deck = shuffle(state.deck);
       state.idx = 0;
+      state.sessionStartedAt = Date.now();
+      state.sessionFinishedAt = null;
+      state.sessionViewSet = new Set();
+      state.sessionRatedSet = new Set();
+      state.sessionRatings = { easy: 0, medium: 0, hard: 0, fail: 0 };
       state.lastRenderSignature = '';
+      state.currentCardStartedAt = Date.now();
       $('#completionPanel').classList.remove('show');
+      startSessionTimer();
       render();
     });
     $('#restartBtn').addEventListener('click', () => startNewSession(true));
@@ -1287,6 +1395,10 @@
     $('#toggleRatingSwitch').addEventListener('click', () => {
       state.showRatings = !state.showRatings;
       renderRatingBar();
+      syncControls();
+    });
+    $('#timerSwitch')?.addEventListener('click', () => {
+      state.showTimer = !state.showTimer;
       syncControls();
     });
     $('#metroSwitch').addEventListener('click', toggleMetro);
